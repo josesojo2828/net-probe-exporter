@@ -128,7 +128,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 
-		if (r.TargetType == "postgres" || r.TargetType == "mysql") && r.Extra != nil {
+		if (r.TargetType == "postgres" || r.TargetType == "mysql" || r.TargetType == "mongodb") && r.Extra != nil {
 			if qDur, ok := r.Extra["query_duration_ms"]; ok {
 				if dur, err := strconv.ParseFloat(qDur, 64); err == nil {
 					ch <- prometheus.MustNewConstMetric(

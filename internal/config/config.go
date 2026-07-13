@@ -36,6 +36,8 @@ type Probe struct {
 	Postgres *PostgresProbeConfig `yaml:"postgres,omitempty"`
 	// MySQL specific settings
 	MySQL *MySQLProbeConfig `yaml:"mysql,omitempty"`
+	// MongoDB specific settings
+	MongoDB *MongoDBProbeConfig `yaml:"mongodb,omitempty"`
 }
 
 // HTTPProbeConfig holds HTTP-specific probe settings.
@@ -73,6 +75,12 @@ type PostgresProbeConfig struct {
 // MySQLProbeConfig holds MySQL-specific probe settings.
 type MySQLProbeConfig struct {
 	DSN   string `yaml:"dsn"`
+	Query string `yaml:"query,omitempty"`
+}
+
+// MongoDBProbeConfig holds MongoDB-specific probe settings.
+type MongoDBProbeConfig struct {
+	URI   string `yaml:"uri"`
 	Query string `yaml:"query,omitempty"`
 }
 
@@ -208,8 +216,15 @@ func (p *Probe) validate() error {
 		if p.MySQL.DSN == "" {
 			return fmt.Errorf("mysql.dsn is required")
 		}
+	case "mongodb":
+		if p.MongoDB == nil {
+			return fmt.Errorf("mongodb config is required for mongodb probe type")
+		}
+		if p.MongoDB.URI == "" {
+			return fmt.Errorf("mongodb.uri is required")
+		}
 	default:
-		return fmt.Errorf("unsupported probe type %q (supported: http, tcp, dns, ssl_cert, postgres, mysql)", p.Type)
+		return fmt.Errorf("unsupported probe type %q (supported: http, tcp, dns, ssl_cert, postgres, mysql, mongodb)", p.Type)
 	}
 
 	return nil

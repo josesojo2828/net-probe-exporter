@@ -42,6 +42,8 @@ func NewRunner(probesCfg []config.Probe) *Runner {
 			p = NewPostgresProbe(cfg)
 		case "mysql":
 			p = NewMySQLProbe(cfg)
+		case "mongodb":
+			p = NewMongoDBProbe(cfg)
 		}
 		if p != nil {
 			r.tasks = append(r.tasks, probeTask{
