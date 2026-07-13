@@ -10,6 +10,7 @@ type Result struct {
 	LatencyMs  float64
 	StatusCode int // HTTP status code (0 for TCP probes)
 	Error      string
+	Extra      map[string]string // probe-specific metadata (DNS records, SSL cert info, etc.)
 }
 
 // Prober is the interface implemented by HTTP and TCP probes.

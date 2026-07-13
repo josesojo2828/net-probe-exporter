@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/josesojo2828/net-probe-exporter/internal/probe"
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,6 +38,20 @@ var (
 		[]string{"target", "result"},
 		nil,
 	)
+
+	sslDaysUntilExpiryDesc = prometheus.NewDesc(
+		"net_probe_ssl_days_until_expiry",
+		"Number of days until the SSL certificate expires",
+		[]string{"target", "type"},
+		nil,
+	)
+
+	sslInfoDesc = prometheus.NewDesc(
+		"net_probe_ssl_info",
+		"SSL certificate metadata",
+		[]string{"target", "issuer", "subject", "valid_from", "valid_to"},
+		nil,
+	)
 )
 
 // Exporter implements prometheus.Collector and serves probe metrics.
@@ -59,6 +74,8 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- latencyDesc
 	ch <- httpStatusCodeDesc
 	ch <- scrapesTotalDesc
+	ch <- sslDaysUntilExpiryDesc
+	ch <- sslInfoDesc
 }
 
 // Collect implements prometheus.Collector.
@@ -83,6 +100,24 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(
 				httpStatusCodeDesc, prometheus.GaugeValue, float64(r.StatusCode), r.TargetName,
 			)
+		}
+
+		if r.TargetType == "ssl_cert" && r.Extra != nil {
+			if daysStr, ok := r.Extra["days_until_expiry"]; ok {
+				if days, err := strconv.ParseFloat(daysStr, 64); err == nil {
+					ch <- prometheus.MustNewConstMetric(
+						sslDaysUntilExpiryDesc, prometheus.GaugeValue, days, r.TargetName, r.TargetType,
+					)
+				}
+			}
+			if issuer, ok := r.Extra["issuer"]; ok {
+				subject := r.Extra["subject"]
+				validFrom := r.Extra["valid_from"]
+				validTo := r.Extra["valid_to"]
+				ch <- prometheus.MustNewConstMetric(
+					sslInfoDesc, prometheus.GaugeValue, 1, r.TargetName, issuer, subject, validFrom, validTo,
+				)
+			}
 		}
 
 		// Track scrape counts per target

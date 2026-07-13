@@ -34,6 +34,10 @@ func NewRunner(probesCfg []config.Probe) *Runner {
 			p = NewHTTPProbe(cfg)
 		case "tcp":
 			p = NewTCPProbe(cfg)
+		case "dns":
+			p = NewDNSProbe(cfg)
+		case "ssl_cert":
+			p = NewSSLCertProbe(cfg)
 		}
 		if p != nil {
 			r.tasks = append(r.tasks, probeTask{

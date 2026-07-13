@@ -28,6 +28,10 @@ type Probe struct {
 	HTTP *HTTPProbeConfig `yaml:"http,omitempty"`
 	// TCP specific settings
 	TCP *TCPProbeConfig `yaml:"tcp,omitempty"`
+	// DNS specific settings
+	DNS *DNSProbeConfig `yaml:"dns,omitempty"`
+	// SSL certificate specific settings
+	SSL *SSLCertProbeConfig `yaml:"ssl_cert,omitempty"`
 }
 
 // HTTPProbeConfig holds HTTP-specific probe settings.
@@ -40,6 +44,20 @@ type HTTPProbeConfig struct {
 // TCPProbeConfig holds TCP-specific probe settings.
 type TCPProbeConfig struct {
 	Host string `yaml:"host"`
+}
+
+// DNSProbeConfig holds DNS-specific probe settings.
+type DNSProbeConfig struct {
+	Target     string `yaml:"target"`
+	Server     string `yaml:"server,omitempty"`
+	RecordType string `yaml:"record_type,omitempty"`
+}
+
+// SSLCertProbeConfig holds SSL certificate probe settings.
+type SSLCertProbeConfig struct {
+	Target string `yaml:"target"`
+	Port   int    `yaml:"port,omitempty"`
+	SNI    string `yaml:"sni,omitempty"`
 }
 
 // Defaults
@@ -136,8 +154,32 @@ func (p *Probe) validate() error {
 		if p.TCP.Host == "" {
 			return fmt.Errorf("tcp.host is required")
 		}
+	case "dns":
+		if p.DNS == nil {
+			return fmt.Errorf("dns config is required for dns probe type")
+		}
+		if p.DNS.Target == "" {
+			return fmt.Errorf("dns.target is required")
+		}
+		if p.DNS.RecordType == "" {
+			p.DNS.RecordType = "A"
+		}
+		validRecordTypes := map[string]bool{"A": true, "AAAA": true, "MX": true, "NS": true, "CNAME": true, "TXT": true}
+		if !validRecordTypes[p.DNS.RecordType] {
+			return fmt.Errorf("dns.record_type must be one of: A, AAAA, MX, NS, CNAME, TXT (got %q)", p.DNS.RecordType)
+		}
+	case "ssl_cert":
+		if p.SSL == nil {
+			return fmt.Errorf("ssl_cert config is required for ssl_cert probe type")
+		}
+		if p.SSL.Target == "" {
+			return fmt.Errorf("ssl_cert.target is required")
+		}
+		if p.SSL.Port == 0 {
+			p.SSL.Port = 443
+		}
 	default:
-		return fmt.Errorf("unsupported probe type %q (supported: http, tcp)", p.Type)
+		return fmt.Errorf("unsupported probe type %q (supported: http, tcp, dns, ssl_cert)", p.Type)
 	}
 
 	return nil
