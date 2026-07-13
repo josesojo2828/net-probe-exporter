@@ -1,0 +1,22 @@
+# net-probe-exporter configuration
+# Copy to config.yaml and adjust targets
+
+listen_port: 9701
+log_level: "info" # debug, info, warn, error
+
+probes:
+  - name: "example-http"
+    type: http
+    interval: 30s
+    timeout: 5s
+    http:
+      url: "https://example.com/health"
+      method: GET
+      expected_status: 200
+
+  - name: "example-tcp"
+    type: tcp
+    interval: 15s
+    timeout: 3s
+    tcp:
+      host: "localhost:5432"

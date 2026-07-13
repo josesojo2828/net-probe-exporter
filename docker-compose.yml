@@ -1,0 +1,37 @@
+services:
+  net-probe-exporter:
+    build: .
+    image: net-probe-exporter:latest
+    container_name: net-probe-exporter
+    ports:
+      - "9701:9701"
+    environment:
+      NET_PROBE_CONFIG: "/config.yaml"
+    volumes:
+      - ./config.yaml:/config.yaml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9701/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring
+
+  tester:
+    image: golang:1.25-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - go-mod:/go/pkg/mod
+    command: go test ./... -v -count=1 -short
+    profiles:
+      - test
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  go-mod:
