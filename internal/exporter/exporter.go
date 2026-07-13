@@ -52,6 +52,13 @@ var (
 		[]string{"target", "issuer", "subject", "valid_from", "valid_to"},
 		nil,
 	)
+
+	dbQueryDurationDesc = prometheus.NewDesc(
+		"net_probe_db_query_duration_ms",
+		"Duration of the last custom database query in milliseconds",
+		[]string{"target"},
+		nil,
+	)
 )
 
 // Exporter implements prometheus.Collector and serves probe metrics.
@@ -76,6 +83,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- scrapesTotalDesc
 	ch <- sslDaysUntilExpiryDesc
 	ch <- sslInfoDesc
+	ch <- dbQueryDurationDesc
 }
 
 // Collect implements prometheus.Collector.
@@ -117,6 +125,16 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 				ch <- prometheus.MustNewConstMetric(
 					sslInfoDesc, prometheus.GaugeValue, 1, r.TargetName, issuer, subject, validFrom, validTo,
 				)
+			}
+		}
+
+		if (r.TargetType == "postgres" || r.TargetType == "mysql") && r.Extra != nil {
+			if qDur, ok := r.Extra["query_duration_ms"]; ok {
+				if dur, err := strconv.ParseFloat(qDur, 64); err == nil {
+					ch <- prometheus.MustNewConstMetric(
+						dbQueryDurationDesc, prometheus.GaugeValue, dur, r.TargetName,
+					)
+				}
 			}
 		}
 

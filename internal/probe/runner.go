@@ -38,6 +38,10 @@ func NewRunner(probesCfg []config.Probe) *Runner {
 			p = NewDNSProbe(cfg)
 		case "ssl_cert":
 			p = NewSSLCertProbe(cfg)
+		case "postgres":
+			p = NewPostgresProbe(cfg)
+		case "mysql":
+			p = NewMySQLProbe(cfg)
 		}
 		if p != nil {
 			r.tasks = append(r.tasks, probeTask{

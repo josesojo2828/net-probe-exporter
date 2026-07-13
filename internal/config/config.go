@@ -32,6 +32,10 @@ type Probe struct {
 	DNS *DNSProbeConfig `yaml:"dns,omitempty"`
 	// SSL certificate specific settings
 	SSL *SSLCertProbeConfig `yaml:"ssl_cert,omitempty"`
+	// Postgres specific settings
+	Postgres *PostgresProbeConfig `yaml:"postgres,omitempty"`
+	// MySQL specific settings
+	MySQL *MySQLProbeConfig `yaml:"mysql,omitempty"`
 }
 
 // HTTPProbeConfig holds HTTP-specific probe settings.
@@ -58,6 +62,18 @@ type SSLCertProbeConfig struct {
 	Target string `yaml:"target"`
 	Port   int    `yaml:"port,omitempty"`
 	SNI    string `yaml:"sni,omitempty"`
+}
+
+// PostgresProbeConfig holds Postgres-specific probe settings.
+type PostgresProbeConfig struct {
+	DSN   string `yaml:"dsn"`
+	Query string `yaml:"query,omitempty"`
+}
+
+// MySQLProbeConfig holds MySQL-specific probe settings.
+type MySQLProbeConfig struct {
+	DSN   string `yaml:"dsn"`
+	Query string `yaml:"query,omitempty"`
 }
 
 // Defaults
@@ -178,8 +194,22 @@ func (p *Probe) validate() error {
 		if p.SSL.Port == 0 {
 			p.SSL.Port = 443
 		}
+	case "postgres":
+		if p.Postgres == nil {
+			return fmt.Errorf("postgres config is required for postgres probe type")
+		}
+		if p.Postgres.DSN == "" {
+			return fmt.Errorf("postgres.dsn is required")
+		}
+	case "mysql":
+		if p.MySQL == nil {
+			return fmt.Errorf("mysql config is required for mysql probe type")
+		}
+		if p.MySQL.DSN == "" {
+			return fmt.Errorf("mysql.dsn is required")
+		}
 	default:
-		return fmt.Errorf("unsupported probe type %q (supported: http, tcp, dns, ssl_cert)", p.Type)
+		return fmt.Errorf("unsupported probe type %q (supported: http, tcp, dns, ssl_cert, postgres, mysql)", p.Type)
 	}
 
 	return nil
