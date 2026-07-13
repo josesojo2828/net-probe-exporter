@@ -99,6 +99,42 @@ docker build -t net-probe-exporter .
 docker run -p 9701:9701 -v $(pwd)/config.yaml:/config.yaml net-probe-exporter
 ```
 
+## Docker Compose (Monitoring Stack)
+
+El stack completo incluye el exporter, Prometheus y Grafana con dashboards pre-configurados.
+
+### Quick Start with Monitoring
+
+```bash
+# 1. Copiar y editar configuración del exporter
+cp config.yaml.example config.yaml
+
+# 2. Copiar y editar credenciales de Grafana
+cp .env.example .env
+# Editar .env con tu contraseña segura
+
+# 3. Levantar todo el stack
+docker compose up -d
+```
+
+Grafana estará disponible en **http://localhost:3000** con credenciales definidas en `.env`. Los dashboards se provisionan automáticamente al iniciar.
+
+Prometheus estará disponible en **http://localhost:9090**.
+
+### Servicios
+
+| Servicio | Puerto | Descripción |
+|----------|--------|-------------|
+| `net-probe-exporter` | 9701 | Métricas Prometheus del healthcheck |
+| `prometheus` | 9090 | Almacenamiento de métricas |
+| `grafana` | 3000 | Dashboards y visualización |
+
+### Tests
+
+```bash
+docker compose --profile test run tester
+```
+
 ## Licencia
 
 MIT
