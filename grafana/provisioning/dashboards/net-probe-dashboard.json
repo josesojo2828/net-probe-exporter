@@ -3,8 +3,30 @@
   "description": "Dashboard for net-probe-exporter monitoring",
   "tags": ["net-probe", "prometheus", "exporter"],
   "schemaVersion": 39,
-  "version": 1,
+  "version": 3,
   "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "site",
+        "type": "query",
+        "query": {
+          "query": "label_values(net_probe_up, target)",
+          "refId": "Prometheus-site-var"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "label": "Site",
+        "allValue": ".*",
+        "includeAll": true,
+        "multi": true,
+        "sort": 1,
+        "refresh": 1
+      }
+    ]
+  },
   "panels": [
     {
       "id": 1,
@@ -22,7 +44,7 @@
       },
       "targets": [
         {
-          "expr": "net_probe_up",
+          "expr": "net_probe_up{target=~\"$site\"}",
           "legendFormat": "{{target}} ({{type}})",
           "refId": "A"
         }
@@ -72,7 +94,7 @@
       },
       "targets": [
         {
-          "expr": "avg(net_probe_latency_ms) by (target)",
+          "expr": "avg(net_probe_latency_ms{target=~\"$site\"}) by (target)",
           "legendFormat": "{{target}}",
           "refId": "A"
         }
@@ -111,7 +133,7 @@
       },
       "targets": [
         {
-          "expr": "net_probe_http_status_code",
+          "expr": "net_probe_http_status_code{target=~\"$site\"}",
           "legendFormat": "{{target}}",
           "refId": "A"
         }
@@ -155,7 +177,7 @@
       },
       "targets": [
         {
-          "expr": "sum(net_probe_scrapes_total)",
+          "expr": "sum(net_probe_scrapes_total{target=~\"$site\"})",
           "legendFormat": "Scrapes",
           "refId": "A"
         }
@@ -192,7 +214,7 @@
       },
       "targets": [
         {
-          "expr": "net_probe_scrapes_total",
+          "expr": "net_probe_scrapes_total{target=~\"$site\"}",
           "legendFormat": "{{target}} ({{result}})",
           "refId": "A"
         }
@@ -217,6 +239,135 @@
         "tooltip": {
           "mode": "multi"
         }
+      }
+    },
+    {
+      "id": 6,
+      "title": "SSL Days Until Expiry",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 16
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "net_probe_ssl_days_until_expiry{target=~\"$site\"}",
+          "legendFormat": "{{target}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 7 },
+              { "color": "yellow", "value": 15 },
+              { "color": "green", "value": 30 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "sortBy": [
+          { "displayName": "Value" }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "title": "Uptime (7 days)",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 16
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "avg_over_time(net_probe_up{target=~\"$site\",type=\"http\"}[7d]) * 100",
+          "legendFormat": "{{target}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 95 },
+              { "color": "yellow", "value": 99 },
+              { "color": "green", "value": 99.9 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "sortBy": [
+          { "displayName": "Value" }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "title": "Current Latency",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 16
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "net_probe_latency_ms{target=~\"$site\"}",
+          "legendFormat": "{{target}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 500 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": {
+        "sortBy": [
+          { "displayName": "Value" }
+        ]
       }
     }
   ]
